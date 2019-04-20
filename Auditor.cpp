@@ -12,21 +12,21 @@
 /// Global Variables
 ///
 
-UINT32 vmx_pin_vmexec_ctrl_supported_bits;
-UINT32 vmx_proc_vmexec_ctrl_supported_bits;
-UINT32 vmx_vmexec_ctrl2_supported_bits;
-UINT32 vmx_vmexit_ctrl_supported_bits;
-UINT32 vmx_vmentry_ctrl_supported_bits;
-UINT64 vmx_ept_vpid_cap_supported_bits;
-UINT64 vmx_vmfunc_supported_bits;
-UINT32 cr0_suppmask_0;
-UINT32 cr0_suppmask_1;
-UINT32 cr4_suppmask_0;
-UINT32 cr4_suppmask_1;
-UINT32 vmx_extensions_bitmask;
+uint32_t vmx_pin_vmexec_ctrl_supported_bits;
+uint32_t vmx_proc_vmexec_ctrl_supported_bits;
+uint32_t vmx_vmexec_ctrl2_supported_bits;
+uint32_t vmx_vmexit_ctrl_supported_bits;
+uint32_t vmx_vmentry_ctrl_supported_bits;
+uint64_t vmx_ept_vpid_cap_supported_bits;
+uint64_t vmx_vmfunc_supported_bits;
+uint32_t cr0_suppmask_0;
+uint32_t cr0_suppmask_1;
+uint32_t cr4_suppmask_0;
+uint32_t cr4_suppmask_1;
+uint32_t vmx_extensions_bitmask;
 
 
-Bit64u efer_suppmask = 0;
+uint64_t efer_suppmask = 0;
 
 
 BxExceptionInfo exceptions_info[32] = {
@@ -93,12 +93,12 @@ uint64_t ReadInputAuditor(const char* Message, int64_t DefaultValue){
 }
 
 
-void VMexit(Bit32u reason, Bit64u qualification) {
+void VMexit(uint32_t reason, uint64_t qualification) {
 
 	printf("\n\n[*] The following configuration will cause VM-Exit with reason (0x%x) and Exit-Qualification (%lx).\n", reason, qualification);
 }
 
-void VMfail(Bit32u error_code)
+void VMfail(uint32_t error_code)
 {
 	printf("\n\n[*] VMFail called with code (0x%x).\n", error_code);
 }
@@ -108,7 +108,7 @@ bx_bool IsValidPhyAddr(bx_phy_address addr)
 	return ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0);
 }
 
-bx_bool CheckPDPTR(Bit64u *pdptr)
+bx_bool CheckPDPTR(uint64_t *pdptr)
 {
 	for (unsigned n = 0; n < 4; n++) {
 		if (pdptr[n] & 0x1) {
@@ -131,12 +131,12 @@ bx_bool long_mode()
 
 void init_vmx_extensions_bitmask()
 {
-	Bit32u features_bitmask = 0;
+	uint32_t features_bitmask = 0;
 
 	features_bitmask |= BX_VMX_VIRTUAL_NMI;
 
 #if BX_SUPPORT_X86_64
-	static bx_bool x86_64_enabled = TRUE;
+	static bx_bool x86_64_enabled = true;
 	if (x86_64_enabled) {
 		features_bitmask |= BX_VMX_TPR_SHADOW |
 			BX_VMX_APIC_VIRTUALIZATION |
@@ -170,7 +170,7 @@ void init_vmx_extensions_bitmask()
 
 
 
-void parse_selector(Bit16u raw_selector, bx_selector_t *selector)
+void parse_selector(uint16_t raw_selector, bx_selector_t *selector)
 {
 	selector->value = raw_selector;
 	selector->index = raw_selector >> 3;
@@ -179,7 +179,7 @@ void parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 }
 
 bx_bool set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
-	Bit16u raw_selector, bx_address base, Bit32u limit_scaled, Bit16u ar_data)
+	uint16_t raw_selector, bx_address base, uint32_t limit_scaled, uint16_t ar_data)
 {
 	parse_selector(raw_selector, &seg->selector);
 
@@ -224,16 +224,16 @@ bx_bool set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 
 	return d->valid;
 }
-bx_bool is_eptptr_valid(Bit64u eptptr)
+bx_bool is_eptptr_valid(uint64_t eptptr)
 {
 	// [2:0] EPT paging-structure memory type
 	//       0 = Uncacheable (UC)
 	//       6 = Write-back (WB)
-	Bit32u memtype = eptptr & 7;
+	uint32_t memtype = eptptr & 7;
 	if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return 0;
 
 	// [5:3] This value is 1 less than the EPT page-walk length
-	Bit32u walk_length = (eptptr >> 3) & 7;
+	uint32_t walk_length = (eptptr >> 3) & 7;
 	if (walk_length != 3) return 0;
 
 	// [6]   EPT A/D Enable
@@ -245,7 +245,7 @@ bx_bool is_eptptr_valid(Bit64u eptptr)
 	}
 }
 
-bx_bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
+bx_bool IsLimitAccessRightsConsistent(uint32_t limit, uint32_t ar)
 {
 	bx_bool g = (ar >> 15) & 1;
 
@@ -269,22 +269,22 @@ bx_bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
 #if BX_SUPPORT_X86_64
 bx_bool IsCanonical(bx_address offset)
 {
-	return ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH - 1)) + 1) < 2);
+	return ((uint64_t)((((int64_t)(offset)) >> (BX_LIN_ADDRESS_WIDTH - 1)) + 1) < 2);
 }
 #endif
 
-BOOLEAN IsValidPageAlignedPhyAddr(bx_phy_address addr)
+bool IsValidPageAlignedPhyAddr(bx_phy_address addr)
 {
 	return ((addr & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0);
 }
 
 
-Bit32u rotate_r(Bit32u val_32)
+uint32_t rotate_r(uint32_t val_32)
 {
 	return (val_32 >> 8) | (val_32 << 24);
 }
 
-Bit32u vmx_from_ar_byte_rd(Bit32u ar_byte)
+uint32_t vmx_from_ar_byte_rd(uint32_t ar_byte)
 {
 	return rotate_r(ar_byte);
 }
@@ -297,9 +297,9 @@ bx_bool isMemTypeValidMTRR(unsigned memtype)
 	case BX_MEMTYPE_WT:
 	case BX_MEMTYPE_WP:
 	case BX_MEMTYPE_WB:
-		return BX_TRUE;
+		return BX_true;
 	default:
-		return BX_FALSE;
+		return BX_false;
 	}
 }
 
@@ -308,14 +308,14 @@ bx_bool isMemTypeValidPAT(unsigned memtype)
 	return (memtype == 0x07) /* UC- */ || isMemTypeValidMTRR(memtype);
 }
 
-bx_bool isValidMSR_PAT(Bit64u pat_val)
+bx_bool isValidMSR_PAT(uint64_t pat_val)
 {
 	// use packed register as 64-bit value with convinient accessors
 	BxPackedRegister pat_msr = pat_val;
 	for (unsigned i = 0; i < 8; i++)
-		if (!isMemTypeValidPAT(pat_msr.ubyte(i))) return BX_FALSE;
+		if (!isMemTypeValidPAT(pat_msr.ubyte(i))) return BX_false;
 
-	return BX_TRUE;
+	return BX_true;
 }
 
 
@@ -562,8 +562,8 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 
 			}
 
-			//# Bit16u guest_interrupt_status = VMread16(VMCS_16BIT_GUEST_INTERRUPT_STATUS);
-			Bit16u guest_interrupt_status = ReadInputAuditor("VMCS_16BIT_GUEST_INTERRUPT_STATUS ", 0x0);
+			//# uint16_t guest_interrupt_status = VMread16(VMCS_16BIT_GUEST_INTERRUPT_STATUS);
+			uint16_t guest_interrupt_status = ReadInputAuditor("VMCS_16BIT_GUEST_INTERRUPT_STATUS ", 0x0);
 
 			vm->rvi = guest_interrupt_status & 0xff;
 			vm->svi = guest_interrupt_status >> 8;
@@ -584,7 +584,7 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 				// ToDo : uncomment these lines
 				printf("\n\n[*] Make sure you have a correct VMX Virtual APIC Address");
 				/*
-				Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
+				uint8_t tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
 				if (vm->vm_tpr_threshold > tpr_shadow) {
 					printf(("\nVMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
 					return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -754,7 +754,7 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
 		}
 
-		Bit64u last_byte = vm->vmexit_msr_store_addr + (vm->vmexit_msr_store_cnt * 16) - 1;
+		uint64_t last_byte = vm->vmexit_msr_store_addr + (vm->vmexit_msr_store_cnt * 16) - 1;
 		if (!IsValidPhyAddr(last_byte)) {
 			printf(("\nVMFAIL: VMCS VMEXIT CTRL: msr store addr too high"));
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -769,7 +769,7 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
 		}
 
-		Bit64u last_byte = (Bit64u)vm->vmexit_msr_load_addr + (vm->vmexit_msr_load_cnt * 16) - 1;
+		uint64_t last_byte = (uint64_t)vm->vmexit_msr_load_addr + (vm->vmexit_msr_load_cnt * 16) - 1;
 		if (!IsValidPhyAddr(last_byte)) {
 			printf(("\nVMFAIL: VMCS VMEXIT CTRL: msr load addr too high"));
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -818,7 +818,7 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
 		}
 
-		Bit64u last_byte = vm->vmentry_msr_load_addr + (vm->vmentry_msr_load_cnt * 16) - 1;
+		uint64_t last_byte = vm->vmentry_msr_load_addr + (vm->vmentry_msr_load_cnt * 16) - 1;
 		if (!IsValidPhyAddr(last_byte)) {
 			printf(("\nVMFAIL: VMCS VMENTRY CTRL: msr load addr too high"));
 			return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -906,8 +906,8 @@ VMX_error_code VMenterLoadCheckVmControls(VMCS_CACHE *vm)
 
 #if BX_SUPPORT_VMX >= 2
 		if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
-			//* unsigned protected_mode_guest = (Bit32u)VMread_natural(VMCS_GUEST_CR0) & BX_CR0_PE_MASK;
-			unsigned protected_mode_guest = (Bit32u)ReadInputAuditor("VMCS_GUEST_CR0 ", 0x0)  & BX_CR0_PE_MASK;
+			//* unsigned protected_mode_guest = (uint32_t)VMread_natural(VMCS_GUEST_CR0) & BX_CR0_PE_MASK;
+			unsigned protected_mode_guest = (uint32_t)ReadInputAuditor("VMCS_GUEST_CR0 ", 0x0)  & BX_CR0_PE_MASK;
 			if (!protected_mode_guest) push_error_reference = 0;
 		}
 #endif
@@ -937,11 +937,11 @@ VMX_error_code VMenterLoadCheckHostState(VMCS_CACHE *vm)
 	// VM Host State Checks Related to Address-Space Size
 	//
 
-	Bit32u vmexit_ctrls = vm->vmexit_ctrls;
+	uint32_t vmexit_ctrls = vm->vmexit_ctrls;
 	if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
 		x86_64_host = 1;
 	}
-	Bit32u vmentry_ctrls = vm->vmentry_ctrls;
+	uint32_t vmentry_ctrls = vm->vmentry_ctrls;
 	if (vmentry_ctrls & VMX_VMENTRY_CTRL1_X86_64_GUEST) {
 		x86_64_guest = 1;
 	}
@@ -968,12 +968,12 @@ VMX_error_code VMenterLoadCheckHostState(VMCS_CACHE *vm)
 
 	//# host_state->cr0 = (bx_address)VMread_natural(VMCS_HOST_CR0);
 	if (~host_state->cr0 & VMX_MSR_CR0_FIXED0) {
-		printf("\nVMFAIL: VMCS host state invalid CR0 0x%08x", (Bit32u)host_state->cr0);
+		printf("\nVMFAIL: VMCS host state invalid CR0 0x%08x", (uint32_t)host_state->cr0);
 		return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
 	}
 
 	if (host_state->cr0 & ~VMX_MSR_CR0_FIXED1) {
-		printf("\nVMFAIL: VMCS host state invalid CR0 0x%08x", (Bit32u)host_state->cr0);
+		printf("\nVMFAIL: VMCS host state invalid CR0 0x%08x", (uint32_t)host_state->cr0);
 		return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
 	}
 
@@ -1089,7 +1089,7 @@ VMX_error_code VMenterLoadCheckHostState(VMCS_CACHE *vm)
 
 	//# host_state->sysenter_esp_msr = (bx_address)VMread_natural(VMCS_HOST_IA32_SYSENTER_ESP_MSR);
 	//# host_state->sysenter_eip_msr = (bx_address)VMread_natural(VMCS_HOST_IA32_SYSENTER_EIP_MSR);
-	//# host_state->sysenter_cs_msr = (Bit16u)VMread32(VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR);
+	//# host_state->sysenter_cs_msr = (uint16_t)VMread32(VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR);
 
 #if BX_SUPPORT_X86_64
 	if (!IsCanonical(host_state->sysenter_esp_msr)) {
@@ -1121,14 +1121,14 @@ VMX_error_code VMenterLoadCheckHostState(VMCS_CACHE *vm)
 #if BX_SUPPORT_VMX >= 2
 	if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
 		//# host_state->efer_msr = VMread64(VMCS_64BIT_HOST_IA32_EFER);
-		if (host_state->efer_msr & ~((Bit64u)efer_suppmask)) {
+		if (host_state->efer_msr & ~((uint64_t)efer_suppmask)) {
 			printf(("\nVMFAIL: VMCS host EFER reserved bits set !"));
 			return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
 		}
 		bx_bool lme = (host_state->efer_msr >> 8) & 0x1;
 		bx_bool lma = (host_state->efer_msr >> 10) & 0x1;
 		if (lma != lme || lma != x86_64_host) {
-			printf("\nVMFAIL: VMCS host EFER (0x%08x) inconsistent value !", (Bit32u)host_state->efer_msr);
+			printf("\nVMFAIL: VMCS host EFER (0x%08x) inconsistent value !", (uint32_t)host_state->efer_msr);
 			return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
 		}
 	}
@@ -1159,7 +1159,7 @@ VMX_error_code VMenterLoadCheckHostState(VMCS_CACHE *vm)
 	return VMXERR_NO_ERROR;
 }
 
-Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 VMXON_Pointer, INT32 RevisionID)
+uint32_t VMenterLoadCheckGuestState(VMCS_CACHE *vm, uint64_t *qualification, uint64_t VMXON_Pointer, int32_t RevisionID)
 {
 	static const char *segname[] = { "ES", "CS", "SS", "DS", "FS", "GS" };
 	int n;
@@ -1178,7 +1178,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 
 
 	// RFLAGS reserved bits [63:22], bit 15, bit 5, bit 3 must be zero
-	if (guest.rflags & BX_CONST64(0xFFFFFFFFFFC08028)) {
+	if (guest.rflags & INT64_C(0xFFFFFFFFFFC08028)) {
 		printf(("\nVMENTER FAIL: RFLAGS reserved bits are set"));
 		return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 	}
@@ -1193,7 +1193,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		v8086_guest = 1;
 
 	bx_bool x86_64_guest = 0; // can't be 1 if X86_64 is not supported (checked before)
-	Bit32u vmentry_ctrls = vm->vmentry_ctrls;
+	uint32_t vmentry_ctrls = vm->vmentry_ctrls;
 #if BX_SUPPORT_X86_64
 	if (vmentry_ctrls & VMX_VMENTRY_CTRL1_X86_64_GUEST) {
 		printf(("\nVMENTER to x86-64 guest"));
@@ -1297,16 +1297,16 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 
 	for (n = 0; n < 6; n++) {
 
-		Bit16u selector;
+		uint16_t selector;
 		bx_address base;
-		Bit32u limit;
-		Bit32u ar;
+		uint32_t limit;
+		uint32_t ar;
 
 		/*
-		Bit16u selector = VMread16(VMCS_16BIT_GUEST_ES_SELECTOR + 2 * n);
+		uint16_t selector = VMread16(VMCS_16BIT_GUEST_ES_SELECTOR + 2 * n);
 		bx_address base = (bx_address)VMread_natural(VMCS_GUEST_ES_BASE + 2 * n);
-		Bit32u limit = VMread32(VMCS_32BIT_GUEST_ES_LIMIT + 2 * n);
-		Bit32u ar = VMread32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2 * n);
+		uint32_t limit = VMread32(VMCS_32BIT_GUEST_ES_LIMIT + 2 * n);
+		uint32_t ar = VMread32(VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS + 2 * n);
 		*/
 
 		if (n == 0)
@@ -1360,7 +1360,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		bx_bool invalid = (ar >> 16) & 1;
 
 		set_segment_ar_data(&guest.sregs[n], !invalid,
-			(Bit16u)selector, base, limit, (Bit16u)ar);
+			(uint16_t)selector, base, limit, (uint16_t)ar);
 
 		if (v8086_guest) {
 			// guest in V8086 mode
@@ -1531,15 +1531,15 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 	// Load and Check Guest State from VMCS - GDTR/IDTR
 	//
 
-	//* Bit64u gdtr_base = VMread_natural(VMCS_GUEST_GDTR_BASE);
-	//* Bit32u gdtr_limit = VMread32(VMCS_32BIT_GUEST_GDTR_LIMIT);
-	//* Bit64u idtr_base = VMread_natural(VMCS_GUEST_IDTR_BASE);
-	//* Bit32u idtr_limit = VMread32(VMCS_32BIT_GUEST_IDTR_LIMIT);
+	//* uint64_t gdtr_base = VMread_natural(VMCS_GUEST_GDTR_BASE);
+	//* uint32_t gdtr_limit = VMread32(VMCS_32BIT_GUEST_GDTR_LIMIT);
+	//* uint64_t idtr_base = VMread_natural(VMCS_GUEST_IDTR_BASE);
+	//* uint32_t idtr_limit = VMread32(VMCS_32BIT_GUEST_IDTR_LIMIT);
 
-	Bit64u gdtr_base = ReadInputAuditor("VMCS_GUEST_GDTR_BASE ", 0x0);
-	Bit32u gdtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_GDTR_LIMIT ", 0x0);
-	Bit64u idtr_base = ReadInputAuditor("VMCS_GUEST_IDTR_BASE ", 0x0);
-	Bit32u idtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_IDTR_LIMIT ", 0x0);
+	uint64_t gdtr_base = ReadInputAuditor("VMCS_GUEST_GDTR_BASE ", 0x0);
+	uint32_t gdtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_GDTR_LIMIT ", 0x0);
+	uint64_t idtr_base = ReadInputAuditor("VMCS_GUEST_IDTR_BASE ", 0x0);
+	uint32_t idtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_IDTR_LIMIT ", 0x0);
 
 #if BX_SUPPORT_X86_64
 	if (!IsCanonical(gdtr_base) || !IsCanonical(idtr_base)) {
@@ -1556,14 +1556,14 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 	// Load and Check Guest State from VMCS - LDTR
 	//
 
-	//* Bit16u ldtr_selector = VMread16(VMCS_16BIT_GUEST_LDTR_SELECTOR);
-	Bit16u ldtr_selector = ReadInputAuditor("VMCS_16BIT_GUEST_LDTR_SELECTOR ", 0x0);
-	//* Bit64u ldtr_base = VMread_natural(VMCS_GUEST_LDTR_BASE);
-	Bit64u ldtr_base = ReadInputAuditor("VMCS_GUEST_LDTR_BASE ", 0x0);
-	//* Bit32u ldtr_limit = VMread32(VMCS_32BIT_GUEST_LDTR_LIMIT);
-	Bit32u ldtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_LDTR_LIMIT ", 0x0);
-	//* Bit32u ldtr_ar = VMread32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS);
-	Bit32u ldtr_ar = ReadInputAuditor("VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS ", 0x0);
+	//* uint16_t ldtr_selector = VMread16(VMCS_16BIT_GUEST_LDTR_SELECTOR);
+	uint16_t ldtr_selector = ReadInputAuditor("VMCS_16BIT_GUEST_LDTR_SELECTOR ", 0x0);
+	//* uint64_t ldtr_base = VMread_natural(VMCS_GUEST_LDTR_BASE);
+	uint64_t ldtr_base = ReadInputAuditor("VMCS_GUEST_LDTR_BASE ", 0x0);
+	//* uint32_t ldtr_limit = VMread32(VMCS_32BIT_GUEST_LDTR_LIMIT);
+	uint32_t ldtr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_LDTR_LIMIT ", 0x0);
+	//* uint32_t ldtr_ar = VMread32(VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS);
+	uint32_t ldtr_ar = ReadInputAuditor("VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS ", 0x0);
 
 
 
@@ -1571,7 +1571,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 	ldtr_ar = vmx_from_ar_byte_rd(ldtr_ar);
 	bx_bool ldtr_invalid = (ldtr_ar >> 16) & 1;
 	if (set_segment_ar_data(&guest.ldtr, !ldtr_invalid,
-		(Bit16u)ldtr_selector, ldtr_base, ldtr_limit, (Bit16u)(ldtr_ar)))
+		(uint16_t)ldtr_selector, ldtr_base, ldtr_limit, (uint16_t)(ldtr_ar)))
 	{
 		// ldtr is valid
 		if (guest.ldtr.selector.ti) {
@@ -1606,14 +1606,14 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 	// Load and Check Guest State from VMCS - TR
 	//
 
-	//* Bit16u tr_selector = VMread16(VMCS_16BIT_GUEST_TR_SELECTOR);
-	Bit16u tr_selector = ReadInputAuditor("VMCS_16BIT_GUEST_TR_SELECTOR ", 0x0);
-	//* Bit64u tr_base = VMread_natural(VMCS_GUEST_TR_BASE);
-	Bit64u tr_base = ReadInputAuditor("VMCS_GUEST_TR_BASE ", 0x0);
-	//* Bit32u tr_limit = VMread32(VMCS_32BIT_GUEST_TR_LIMIT);
-	Bit32u tr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_TR_LIMIT ", 0x0);
-	//* Bit32u tr_ar = VMread32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS);
-	Bit32u tr_ar = ReadInputAuditor("VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS ", 0x0);
+	//* uint16_t tr_selector = VMread16(VMCS_16BIT_GUEST_TR_SELECTOR);
+	uint16_t tr_selector = ReadInputAuditor("VMCS_16BIT_GUEST_TR_SELECTOR ", 0x0);
+	//* uint64_t tr_base = VMread_natural(VMCS_GUEST_TR_BASE);
+	uint64_t tr_base = ReadInputAuditor("VMCS_GUEST_TR_BASE ", 0x0);
+	//* uint32_t tr_limit = VMread32(VMCS_32BIT_GUEST_TR_LIMIT);
+	uint32_t tr_limit = ReadInputAuditor("VMCS_32BIT_GUEST_TR_LIMIT ", 0x0);
+	//* uint32_t tr_ar = VMread32(VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS);
+	uint32_t tr_ar = ReadInputAuditor("VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS ", 0x0);
 
 
 	tr_ar = vmx_from_ar_byte_rd(tr_ar);
@@ -1627,7 +1627,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 #endif
 
 	set_segment_ar_data(&guest.tr, !tr_invalid,
-		(Bit16u)tr_selector, tr_base, tr_limit, (Bit16u)(tr_ar));
+		(uint16_t)tr_selector, tr_base, tr_limit, (uint16_t)(tr_ar));
 
 	if (tr_invalid) {
 		printf(("\nVMENTER FAIL: VMCS guest TR invalid"));
@@ -1710,7 +1710,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		guest.efer_msr = ReadInputAuditor("VMCS_64BIT_GUEST_IA32_EFER ", 0x0);
 
 
-		if (guest.efer_msr & ~((Bit64u)efer_suppmask)) {
+		if (guest.efer_msr & ~((uint64_t)efer_suppmask)) {
 			printf(("\nVMENTER FAIL: VMCS guest EFER reserved bits set !"));
 			return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 		}
@@ -1721,7 +1721,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 			return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 		}
 		if (lma != lme && (guest.cr0 & BX_CR0_PG_MASK) != 0) {
-			printf("\nVMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", (Bit32u)guest.efer_msr);
+			printf("\nVMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", (uint32_t)guest.efer_msr);
 			return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 		}
 	}
@@ -1743,15 +1743,15 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 
 	if (vm->vmcs_linkptr != BX_INVALID_VMCSPTR) {
 		if (!IsValidPageAlignedPhyAddr(vm->vmcs_linkptr)) {
-			*qualification = (Bit64u)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+			*qualification = (uint64_t)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
 			printf(("\nVMFAIL: VMCS link pointer malformed"));
 			return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 		}
 
-		Bit32u revision = RevisionID;
+		uint32_t revision = RevisionID;
 		if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VMCS_SHADOWING) {
 			if ((revision & BX_VMCS_SHADOW_BIT_MASK) == 0) {
-				*qualification = (Bit64u)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+				*qualification = (uint64_t)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
 				printf("\nVMFAIL: VMCS link pointer must indicate shadow VMCS revision ID = %d", revision);
 				return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 			}
@@ -1759,7 +1759,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		}
 		// If revision ID is not true then we can't load our VMCS so skip this check
 		//if (revision != BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id()) {
-		//	*qualification = (Bit64u)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+		//	*qualification = (uint64_t)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
 		//	printf(("\nVMFAIL: VMCS link pointer incorrect revision ID %d != %d", revision, BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id()));
 		//	return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 		//}
@@ -1768,7 +1768,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		// We're not in SMM
 		if ( /*!BX_CPU_THIS_PTR in_smm || */ (vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER) != 0) {
 			if (vm->vmcs_linkptr == VMXON_Pointer) {
-				*qualification = (Bit64u)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+				*qualification = (uint64_t)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
 				printf(("\nVMFAIL: VMCS link pointer equal to current VMCS pointer"));
 				return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 			}
@@ -1777,16 +1777,16 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 			// Change it for real-world example
 			//if (vm->vmcs_linkptr == BX_CPU_THIS_PTR vmxonptr) {
 			if (vm->vmcs_linkptr == VMXON_Pointer) {
-				*qualification = (Bit64u)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+				*qualification = (uint64_t)VMENTER_ERR_GUEST_STATE_LINK_POINTER;
 				printf(("\nVMFAIL: VMCS link pointer equal to VMXON pointer"));
 				return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 			}
 		}
 	}
 
-	//* guest.tmpDR6 = (Bit32u)VMread_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
-	guest.tmpDR6 = (Bit32u)ReadInputAuditor("VMCS_GUEST_PENDING_DBG_EXCEPTIONS ", 0x0);
-	if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFFAFF0)) {
+	//* guest.tmpDR6 = (uint32_t)VMread_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
+	guest.tmpDR6 = (uint32_t)ReadInputAuditor("VMCS_GUEST_PENDING_DBG_EXCEPTIONS ", 0x0);
+	if (guest.tmpDR6 & INT64_C(0xFFFFFFFFFFFFAFF0)) {
 		printf("\nVMENTER FAIL: VMCS guest tmpDR6 reserved bits");
 		return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
 	}
@@ -1925,7 +1925,7 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 		else
 #endif
 		{
-			if (!CheckPDPTR((Bit64u*)guest.cr3)) {
+			if (!CheckPDPTR((uint64_t*)guest.cr3)) {
 				*qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
 				printf(("\nVMENTER: Guest State PDPTRs Checks Failed"));
 				return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1945,24 +1945,24 @@ Bit32u VMenterLoadCheckGuestState(VMCS_CACHE *vm, Bit64u *qualification, UINT64 
 }
 
 
-BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer, INT32 RevisionID,
-	UINT32 _vmx_pin_vmexec_ctrl_supported_bits, UINT32 _vmx_proc_vmexec_ctrl_supported_bits,
-	UINT32 _vmx_vmexec_ctrl2_supported_bits, UINT32 _vmx_vmexit_ctrl_supported_bits,
-	UINT32 _vmx_vmentry_ctrl_supported_bits, UINT64 _vmx_ept_vpid_cap_supported_bits,
-	UINT64 _vmx_vmfunc_supported_bits, UINT32 _cr0_suppmask_0, UINT32 _cr0_suppmask_1,
-	UINT32 _cr4_suppmask_0, UINT32 _cr4_suppmask_1)
+bool CheckVMXState(VMCS_CACHE *pVm, bool IsVMResume, uint64_t VMXON_Pointer, int32_t RevisionID,
+	uint32_t _vmx_pin_vmexec_ctrl_supported_bits, uint32_t _vmx_proc_vmexec_ctrl_supported_bits,
+	uint32_t _vmx_vmexec_ctrl2_supported_bits, uint32_t _vmx_vmexit_ctrl_supported_bits,
+	uint32_t _vmx_vmentry_ctrl_supported_bits, uint64_t _vmx_ept_vpid_cap_supported_bits,
+	uint64_t _vmx_vmfunc_supported_bits, uint32_t _cr0_suppmask_0, uint32_t _cr0_suppmask_1,
+	uint32_t _cr4_suppmask_0, uint32_t _cr4_suppmask_1)
 {
 	// Set VMX-Capabilities
 
 
 	/*
-	Bit32u vmx_pin_vmexec_ctrl_supported_bits;
-	Bit32u vmx_proc_vmexec_ctrl_supported_bits;
-	Bit32u vmx_vmexec_ctrl2_supported_bits;
-	Bit32u vmx_vmexit_ctrl_supported_bits;
-	Bit32u vmx_vmentry_ctrl_supported_bits;
-	Bit64u vmx_ept_vpid_cap_supported_bits;
-	Bit64u vmx_vmfunc_supported_bits;
+	uint32_t vmx_pin_vmexec_ctrl_supported_bits;
+	uint32_t vmx_proc_vmexec_ctrl_supported_bits;
+	uint32_t vmx_vmexec_ctrl2_supported_bits;
+	uint32_t vmx_vmexit_ctrl_supported_bits;
+	uint32_t vmx_vmentry_ctrl_supported_bits;
+	uint64_t vmx_ept_vpid_cap_supported_bits;
+	uint64_t vmx_vmfunc_supported_bits;
 	*/
 
 	vmx_pin_vmexec_ctrl_supported_bits = _vmx_pin_vmexec_ctrl_supported_bits;
@@ -2037,8 +2037,8 @@ BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer,
 
 	}*/
 
-	//# Bit32u launch_state = VMread32(VMCS_LAUNCH_STATE_FIELD_ENCODING);
-	Bit32u launch_state = ReadInputAuditor("VMCS_LAUNCH_STATE_FIELD_ENCODING ", 0x0);
+	//# uint32_t launch_state = VMread32(VMCS_LAUNCH_STATE_FIELD_ENCODING);
+	uint32_t launch_state = ReadInputAuditor("VMCS_LAUNCH_STATE_FIELD_ENCODING ", 0x0);
 
 
 	if (vmlaunch) {
@@ -2082,8 +2082,8 @@ BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer,
 	// STEP 5: Load and Check Guest State
 	///////////////////////////////////////////////////////
 
-	Bit64u qualification = VMENTER_ERR_NO_ERROR;
-	Bit32u state_load_error = VMenterLoadCheckGuestState(pVm, &qualification, VMXON_Pointer, RevisionID);
+	uint64_t qualification = VMENTER_ERR_NO_ERROR;
+	uint32_t state_load_error = VMenterLoadCheckGuestState(pVm, &qualification, VMXON_Pointer, RevisionID);
 	if (state_load_error) {
 		printf(("\nVMEXIT: Guest State Checks Failed"));
 		VMexit(VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE | (1 << 31), qualification);
@@ -2093,7 +2093,7 @@ BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer,
 
 	// Not needed :)
 	/*
-	Bit32u msr = LoadMSRs(pVm->vmentry_msr_load_cnt, pVm->vmentry_msr_load_addr);
+	uint32_t msr = LoadMSRs(pVm->vmentry_msr_load_cnt, pVm->vmentry_msr_load_addr);
 	if (msr) {
 		printf("\nVMEXIT: Error when loading guest MSR 0x%08x", msr);
 		VMexit(VMX_VMEXIT_VMENTRY_FAILURE_MSR | (1 << 31), msr);
@@ -2150,9 +2150,9 @@ BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer,
 
 ReturnTrue:
 	printf("\n\n[*] All the states checked successfully, now if there wasn't any problem you can execute VMLAUNCH");
-	return TRUE;
+	return true;
 
 ReturnFalse:
 	printf("\n\n[*] The was problem in your configuration, please to solve the error before executing VMLAUNCH.");
-	return FALSE;
+	return false;
 }

@@ -5,9 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <conio.h>
-
-
+#include <cstdio>
 
 using namespace std;
 
@@ -68,43 +66,43 @@ int main()
 
 
 	//  MSR_IA32_VMX_PINBASED_CTLS          0x481
-	UINT32 _vmx_pin_vmexec_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_PINBASED_CTLS (0x481)", 0x0);
+	uint32_t _vmx_pin_vmexec_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_PINBASED_CTLS (0x481)", 0x0);
 
 
 
 
 	//  MSR_IA32_VMX_PROCBASED_CTLS         0x482
-	UINT32 _vmx_proc_vmexec_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_PROCBASED_CTLS (0x482)", 0x0);
+	uint32_t _vmx_proc_vmexec_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_PROCBASED_CTLS (0x482)", 0x0);
 
 
 	// MSR_IA32_VMX_PROCBASED_CTLS2        0x48B
-	UINT32 _vmx_vmexec_ctrl2_supported_bits =  ReadInput("MSR_IA32_VMX_PROCBASED_CTLS2 (0x48B)", 0x0);
+	uint32_t _vmx_vmexec_ctrl2_supported_bits =  ReadInput("MSR_IA32_VMX_PROCBASED_CTLS2 (0x48B)", 0x0);
 
 
 
 	// MSR_IA32_VMX_EXIT_CTLS              0x483
-	UINT32 _vmx_vmexit_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_EXIT_CTLS (0x483)", 0x0);
+	uint32_t _vmx_vmexit_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_EXIT_CTLS (0x483)", 0x0);
 
 	// MSR_IA32_VMX_ENTRY_CTLS             0x484
-	UINT32 _vmx_vmentry_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_ENTRY_CTLS (0x484)", 0x0);
+	uint32_t _vmx_vmentry_ctrl_supported_bits = ReadInput("MSR_IA32_VMX_ENTRY_CTLS (0x484)", 0x0);
 
 	// MSR_IA32_VMX_EPT_VPID_CAP           0x48C
-	UINT64 _vmx_ept_vpid_cap_supported_bits = ReadInput("MSR_IA32_VMX_EPT_VPID_CAP (0x48C)", 0x0);
+	uint64_t _vmx_ept_vpid_cap_supported_bits = ReadInput("MSR_IA32_VMX_EPT_VPID_CAP (0x48C)", 0x0);
 
 	//  MSR_IA32_VMX_VMFUNC                 0x491
-	UINT64 _vmx_vmfunc_supported_bits = ReadInput("MSR_IA32_VMX_VMFUNC (0x491)", 0x0);
+	uint64_t _vmx_vmfunc_supported_bits = ReadInput("MSR_IA32_VMX_VMFUNC (0x491)", 0x0);
 
 	//  MSR_IA32_VMX_CR0_FIXED0             0x486
-	UINT32 _cr0_suppmask_0 = ReadInput("MSR_IA32_VMX_CR0_FIXED0 (0x486)", 0x0);
+	uint32_t _cr0_suppmask_0 = ReadInput("MSR_IA32_VMX_CR0_FIXED0 (0x486)", 0x0);
 
 	//  MSR_IA32_VMX_CR0_FIXED1             0x487
-	UINT32 _cr0_suppmask_1 = ReadInput("MSR_IA32_VMX_CR0_FIXED1 (0x487)", 0x0);
+	uint32_t _cr0_suppmask_1 = ReadInput("MSR_IA32_VMX_CR0_FIXED1 (0x487)", 0x0);
 
 	//  MSR_IA32_VMX_CR4_FIXED0             0x488
-	UINT32 _cr4_suppmask_0 = ReadInput("MSR_IA32_VMX_CR4_FIXED0 (0x488)", 0x0);
+	uint32_t _cr4_suppmask_0 = ReadInput("MSR_IA32_VMX_CR4_FIXED0 (0x488)", 0x0);
 
 	//  MSR_IA32_VMX_CR4_FIXED1             0x489
-	UINT32 _cr4_suppmask_1 = ReadInput("MSR_IA32_VMX_CR4_FIXED1 (0x489)", 0x0);
+	uint32_t _cr4_suppmask_1 = ReadInput("MSR_IA32_VMX_CR4_FIXED1 (0x489)", 0x0);
 
 
 
@@ -141,9 +139,9 @@ int main()
 
 
 	printf("\n______________________ GENERAL DETAILS _________________________\n");
-	BOOLEAN IsVMResume = (BOOLEAN)  ReadInput("Is it VM Resume (0x1) ? otherwise it's VM Launch (0x0) ", 0x0);
-	UINT64 RevisionID = ReadInput("What's the RevisionID ? ", 0x4);
-	UINT64 VMXON_Pointer = ReadInput("What's the VMXON Pointer ? ", 0x0);
+	bool IsVMResume = (bool)  ReadInput("Is it VM Resume (0x1) ? otherwise it's VM Launch (0x0) ", 0x0);
+	uint64_t RevisionID = ReadInput("What's the RevisionID ? ", 0x4);
+	uint64_t VMXON_Pointer = ReadInput("What's the VMXON Pointer ? ", 0x0);
 
 	printf("\n______________________ GUEST & CTRL BITS _________________________\n");
 
@@ -158,7 +156,5 @@ int main()
 
 	printf("\n\n\n\n\n______________________ That's it ;) _________________________\n");
 
-
-	_getch();
-	_getch();
+	return EXIT_SUCCESS;
 }

@@ -7,18 +7,17 @@
 
 #pragma once
 #include "pch.h"
-#include <Windows.h>
 #include <iostream>
 
 
 using namespace std;
 
 
-#define BX_SUPPORT_VMX 1
+//#define BX_SUPPORT_VMX 1
 #define BX_SUPPORT_X86_64 1
 #define BX_SUPPORT_VMX 2
 
-int CPL = 0; // assume you're running on kernel
+//int CPL = 0; // assume you're running on kernel
 
 
 
@@ -31,23 +30,13 @@ int CPL = 0; // assume you're running on kernel
 #define FMT_ADDRX64 "%016I64x"
 #define FMT_PHY_ADDRX64 "%012I64x"
 
-typedef unsigned char      Bit8u;
-typedef   signed char      Bit8s;
-typedef unsigned short     Bit16u;
-typedef   signed short     Bit16s;
-typedef unsigned int       Bit32u;
-typedef   signed int       Bit32s;
-typedef unsigned __int64   Bit64u;
-typedef   signed __int64   Bit64s;
-typedef unsigned __int64 uint64_t;
-
-typedef Bit64u bx_phy_address;
-typedef Bit32u bx_bool;
+typedef uint64_t bx_phy_address;
+typedef uint32_t bx_bool;
 
 #if BX_SUPPORT_X86_64
-typedef Bit64u bx_address;
+typedef uint64_t bx_address;
 #else
-typedef Bit32u bx_address;
+typedef uint32_t bx_address;
 #endif
 
 /////////////////////////////////////////////////////////////////////////
@@ -85,22 +74,20 @@ typedef struct bx_VMX_Cap
 	// VMX Capabilities
 	//
 
-	Bit32u vmx_pin_vmexec_ctrl_supported_bits;
-	Bit32u vmx_proc_vmexec_ctrl_supported_bits;
-	Bit32u vmx_vmexec_ctrl2_supported_bits;
-	Bit32u vmx_vmexit_ctrl_supported_bits;
-	Bit32u vmx_vmentry_ctrl_supported_bits;
+	uint32_t vmx_pin_vmexec_ctrl_supported_bits;
+	uint32_t vmx_proc_vmexec_ctrl_supported_bits;
+	uint32_t vmx_vmexec_ctrl2_supported_bits;
+	uint32_t vmx_vmexit_ctrl_supported_bits;
+	uint32_t vmx_vmentry_ctrl_supported_bits;
 #if BX_SUPPORT_VMX >= 2
-	Bit64u vmx_ept_vpid_cap_supported_bits;
-	Bit64u vmx_vmfunc_supported_bits;
+	uint64_t vmx_ept_vpid_cap_supported_bits;
+	uint64_t vmx_vmfunc_supported_bits;
 #endif
 } VMX_CAP;
 
 
-#define BX_CONST64(x)  (x##I64)
-
 // VMCS pointer is always 64-bit variable
-const Bit64u BX_INVALID_VMCSPTR = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+const uint64_t BX_INVALID_VMCSPTR = INT64_C(0xFFFFFFFFFFFFFFFF);
 
 #define POOLTAG 0x48564653 // [H]yper[V]isor [F]rom [S]cratch (HVFS)
 
@@ -256,7 +243,7 @@ enum VMFunctions {
 	VMX_VMFUNC_EPTP_SWITCHING = 0
 };
 
-#define VMX_VMFUNC_EPTP_SWITCHING_MASK (BX_CONST64(1) << VMX_VMFUNC_EPTP_SWITCHING)
+#define VMX_VMFUNC_EPTP_SWITCHING_MASK (INT64_C(1) << VMX_VMFUNC_EPTP_SWITCHING)
 
 // =============
 //  VMCS fields
@@ -569,12 +556,12 @@ enum VMX_state {
 // ================
 
 typedef struct { /* bx_selector_t */
-	Bit16u value;   /* the 16bit value of the selector */
+	uint16_t value;   /* the 16bit value of the selector */
 	/* the following fields are extracted from the value field in protected
 	   mode only.  They're used for sake of efficiency */
-	Bit16u index;   /* 13bit index extracted from value in protected mode */
-	Bit8u  ti;      /* table indicator bit extracted from value */
-	Bit8u  rpl;     /* RPL extracted from value */
+	uint16_t index;   /* 13bit index extracted from value in protected mode */
+	uint8_t  ti;      /* table indicator bit extracted from value */
+	uint8_t  rpl;     /* RPL extracted from value */
 } bx_selector_t;
 
 
@@ -591,9 +578,9 @@ typedef struct
 						   // hold only 0 or 1 once.
 
 	bx_bool p;             /* present */
-	Bit8u   dpl;           /* descriptor privilege level 0..3 */
+	uint8_t   dpl;           /* descriptor privilege level 0..3 */
 	bx_bool segment;       /* 0 = system/gate, 1 = data/code segment */
-	Bit8u   type;          /* For system & gate descriptors:
+	uint8_t   type;          /* For system & gate descriptors:
 							*  0 = invalid descriptor (reserved)
 							*  1 = 286 available Task State Segment (TSS)
 							*  2 = LDT descriptor
@@ -652,7 +639,7 @@ typedef struct
 	union {
 		struct {
 			bx_address base;       /* base address: 286=24bits, 386=32bits, long=64 */
-			Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
+			uint32_t  limit_scaled;  /* for efficiency, this contrived field is set to
 									* limit for byte granular, and
 									* (limit << 12) | 0xfff for page granular seg's
 									*/
@@ -664,13 +651,13 @@ typedef struct
 			bx_bool avl;           /* available for use by system */
 		} segment;
 		struct {
-			Bit8u   param_count;   /* 5bits (0..31) #words/dword to copy from caller's
+			uint8_t   param_count;   /* 5bits (0..31) #words/dword to copy from caller's
 									* stack to called procedure's stack. */
-			Bit16u  dest_selector;
-			Bit32u  dest_offset;
+			uint16_t  dest_selector;
+			uint32_t  dest_offset;
 		} gate;
 		struct {                 /* type 5: Task Gate Descriptor */
-			Bit16u  tss_selector;  /* TSS segment selector */
+			uint16_t  tss_selector;  /* TSS segment selector */
 		} taskgate;
 	} u;
 
@@ -685,7 +672,7 @@ typedef struct {
 
 typedef struct {
 	bx_address       base;   /* base address: 24bits=286,32bits=386,64bits=x86-64 */
-	Bit16u           limit;  /* limit, 16bits */
+	uint16_t           limit;  /* limit, 16bits */
 } bx_global_segment_reg_t;
 
 typedef struct bx_VMCS_GUEST_STATE
@@ -706,22 +693,22 @@ typedef struct bx_VMCS_GUEST_STATE
 	bx_segment_reg_t        ldtr;
 	bx_segment_reg_t        tr;
 
-	Bit64u ia32_debugctl_msr;
+	uint64_t ia32_debugctl_msr;
 	bx_address sysenter_esp_msr;
 	bx_address sysenter_eip_msr;
-	Bit32u sysenter_cs_msr;
+	uint32_t sysenter_cs_msr;
 
-	Bit32u smbase;
-	Bit32u activity_state;
-	Bit32u interruptibility_state;
-	Bit32u tmpDR6;
+	uint32_t smbase;
+	uint32_t activity_state;
+	uint32_t interruptibility_state;
+	uint32_t tmpDR6;
 
 #if BX_SUPPORT_VMX >= 2
 #if BX_SUPPORT_X86_64
-	Bit64u efer_msr;
+	uint64_t efer_msr;
 #endif
-	Bit64u pat_msr;
-	Bit64u pdptr[4];
+	uint64_t pat_msr;
+	uint64_t pdptr[4];
 #endif
 } VMCS_GUEST_STATE;
 
@@ -845,7 +832,7 @@ typedef struct bx_VMCS_HOST_STATE
 	bx_address cr3;
 	bx_address cr4;
 
-	Bit16u segreg_selector[6];
+	uint16_t segreg_selector[6];
 
 	bx_address fs_base;
 	bx_address gs_base;
@@ -853,7 +840,7 @@ typedef struct bx_VMCS_HOST_STATE
 	bx_address gdtr_base;
 	bx_address idtr_base;
 
-	Bit32u tr_selector;
+	uint32_t tr_selector;
 	bx_address tr_base;
 
 	bx_address rsp;
@@ -861,13 +848,13 @@ typedef struct bx_VMCS_HOST_STATE
 
 	bx_address sysenter_esp_msr;
 	bx_address sysenter_eip_msr;
-	Bit32u sysenter_cs_msr;
+	uint32_t sysenter_cs_msr;
 
 #if BX_SUPPORT_VMX >= 2
 #if BX_SUPPORT_X86_64
-	Bit64u efer_msr;
+	uint64_t efer_msr;
 #endif
-	Bit64u pat_msr;
+	uint64_t pat_msr;
 #endif
 } VMCS_HOST_STATE;
 
@@ -875,10 +862,10 @@ typedef struct bx_VMCS_HOST_STATE
 
 // used for pause loop exiting
 typedef struct {
-	Bit32u pause_loop_exiting_gap;
-	Bit32u pause_loop_exiting_window;
-	Bit64u last_pause_time;
-	Bit64u first_pause_time;
+	uint32_t pause_loop_exiting_gap;
+	uint32_t pause_loop_exiting_window;
+	uint64_t last_pause_time;
+	uint64_t first_pause_time;
 }VMX_PLE;
 
 #endif
@@ -898,7 +885,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
     (vmx_pin_vmexec_ctrl_supported_bits)
 
-	Bit32u vmexec_ctrls1;
+	uint32_t vmexec_ctrls1;
 
 #define VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT   (1 << 2)
 #define VMX_VM_EXEC_CTRL2_TSC_OFFSET                (1 << 3)
@@ -925,7 +912,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL2_SUPPORTED_BITS \
     (vmx_proc_vmexec_ctrl_supported_bits)
 
-	Bit32u vmexec_ctrls2;
+	uint32_t vmexec_ctrls2;
 
 #define VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES  (1 <<  0) /* APIC virtualization */
 #define VMX_VM_EXEC_CTRL3_EPT_ENABLE                (1 <<  1) /* EPT */
@@ -953,16 +940,16 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (vmx_vmexec_ctrl2_supported_bits)
 
-	Bit32u vmexec_ctrls3;
+	uint32_t vmexec_ctrls3;
 
-	Bit64u vmcs_linkptr;
+	uint64_t vmcs_linkptr;
 
-	Bit64u tsc_multiplier;
+	uint64_t tsc_multiplier;
 
-	Bit32u vm_exceptions_bitmap;
-	Bit32u vm_pf_mask;
-	Bit32u vm_pf_match;
-	Bit64u io_bitmap_addr[2];
+	uint32_t vm_exceptions_bitmap;
+	uint32_t vm_pf_mask;
+	uint32_t vm_pf_match;
+	uint64_t io_bitmap_addr[2];
 	bx_phy_address msr_bitmap_addr;
 
 	bx_address vm_cr0_mask;
@@ -972,21 +959,21 @@ typedef struct bx_VMCS
 
 #define VMX_CR3_TARGET_MAX_CNT 4
 
-	Bit32u vm_cr3_target_cnt;
+	uint32_t vm_cr3_target_cnt;
 	bx_address vm_cr3_target_value[VMX_CR3_TARGET_MAX_CNT];
 
 #if BX_SUPPORT_X86_64
 	bx_phy_address virtual_apic_page_addr;
-	Bit32u vm_tpr_threshold;
+	uint32_t vm_tpr_threshold;
 	bx_phy_address apic_access_page;
 	unsigned apic_access;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-	Bit64u eptptr;
-	Bit16u vpid;
-	Bit64u pml_address;
-	Bit16u pml_index;
+	uint64_t eptptr;
+	uint16_t vpid;
+	uint64_t pml_address;
+	uint16_t pml_index;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -994,11 +981,11 @@ typedef struct bx_VMCS
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-	Bit8u svi; /* Servicing Virtual Interrupt */
-	Bit8u rvi; /* Requesting Virtual Interrupt */
-	Bit8u vppr;
+	uint8_t svi; /* Servicing Virtual Interrupt */
+	uint8_t rvi; /* Requesting Virtual Interrupt */
+	uint8_t vppr;
 
-	Bit32u eoi_exit_bitmap[8];
+	uint32_t eoi_exit_bitmap[8];
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -1007,11 +994,11 @@ typedef struct bx_VMCS
 
 #if BX_SUPPORT_VMX >= 2
 	bx_phy_address ve_info_addr;
-	Bit16u eptp_index;
+	uint16_t eptp_index;
 #endif
 
 #if BX_SUPPORT_VMX >= 2
-	Bit64u xss_exiting_bitmap;
+	uint64_t xss_exiting_bitmap;
 #endif
 
 	//
@@ -1033,11 +1020,11 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
     (vmx_vmexit_ctrl_supported_bits)
 
-	Bit32u vmexit_ctrls;
+	uint32_t vmexit_ctrls;
 
-	Bit32u vmexit_msr_store_cnt;
+	uint32_t vmexit_msr_store_cnt;
 	bx_phy_address vmexit_msr_store_addr;
-	Bit32u vmexit_msr_load_cnt;
+	uint32_t vmexit_msr_load_cnt;
 	bx_phy_address vmexit_msr_load_addr;
 
 	//
@@ -1057,14 +1044,14 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (vmx_vmentry_ctrl_supported_bits)
 
-	Bit32u vmentry_ctrls;
+	uint32_t vmentry_ctrls;
 
-	Bit32u vmentry_msr_load_cnt;
+	uint32_t vmentry_msr_load_cnt;
 	bx_phy_address vmentry_msr_load_addr;
 
-	Bit32u vmentry_interr_info;
-	Bit32u vmentry_excep_err_code;
-	Bit32u vmentry_instr_length;
+	uint32_t vmentry_interr_info;
+	uint32_t vmentry_excep_err_code;
+	uint32_t vmentry_instr_length;
 
 	//
 	// VM Functions
@@ -1075,16 +1062,16 @@ typedef struct bx_VMCS
 #define VMX_VMFUNC_CTRL1_SUPPORTED_BITS \
     (vmx_vmfunc_supported_bits)
 
-	Bit64u vmfunc_ctrls;
-	Bit64u eptp_list_address;
+	uint64_t vmfunc_ctrls;
+	uint64_t eptp_list_address;
 
 #endif
 
 	//
 	// VMCS Hidden and Read-Only Fields
 	//
-	Bit32u idt_vector_info;
-	Bit32u idt_vector_error_code;
+	uint32_t idt_vector_info;
+	uint32_t idt_vector_error_code;
 
 	//
 	// VMCS Host State
@@ -1127,9 +1114,9 @@ typedef struct bx_VMCS
 //       instruction-information field on VM exits due to
 //       execution of INS/OUTS
 // 55:55 set if any VMX controls that default to `1 may be
-//       cleared to `0, also indicates that IA32_VMX_TRUE_PINBASED_CTLS,
-//       IA32_VMX_TRUE_PROCBASED_CTLS, IA32_VMX_TRUE_EXIT_CTLS and
-//       IA32_VMX_TRUE_ENTRY_CTLS MSRs are supported.
+//       cleared to `0, also indicates that IA32_VMX_true_PINBASED_CTLS,
+//       IA32_VMX_true_PROCBASED_CTLS, IA32_VMX_true_EXIT_CTLS and
+//       IA32_VMX_true_ENTRY_CTLS MSRs are supported.
 // 56:63 reserved, must be zero
 //
 
@@ -1139,7 +1126,7 @@ typedef struct bx_VMCS
      (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)
 
 #define VMX_MSR_VMX_BASIC \
-   ((((Bit64u) VMX_MSR_VMX_BASIC_HI) << 32) | VMX_MSR_VMX_BASIC_LO)
+   ((((uint64_t) VMX_MSR_VMX_BASIC_HI) << 32) | VMX_MSR_VMX_BASIC_LO)
 
 
 // ------------------------------------------------------------------------
@@ -1170,17 +1157,17 @@ typedef struct bx_VMCS
        (VMX_VM_EXEC_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_PINBASED_CTRLS_LO)
 
 #define VMX_MSR_VMX_PINBASED_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PINBASED_CTRLS_LO)
+   ((((uint64_t) VMX_MSR_VMX_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PINBASED_CTRLS_LO)
 
-// IA32_MSR_VMX_TRUE_PINBASED_CTRLS MSR (0x48d)
+// IA32_MSR_VMX_true_PINBASED_CTRLS MSR (0x48d)
 // --------------------------------
 
 // no changes from original IA32_MSR_VMX_PINBASED_CTRLS
-#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO (VMX_MSR_VMX_PINBASED_CTRLS_LO)
-#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI (VMX_MSR_VMX_PINBASED_CTRLS_HI)
+#define VMX_MSR_VMX_true_PINBASED_CTRLS_LO (VMX_MSR_VMX_PINBASED_CTRLS_LO)
+#define VMX_MSR_VMX_true_PINBASED_CTRLS_HI (VMX_MSR_VMX_PINBASED_CTRLS_HI)
 
-#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO)
+#define VMX_MSR_VMX_true_PINBASED_CTRLS \
+   ((((uint64_t) VMX_MSR_VMX_true_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_true_PINBASED_CTRLS_LO)
 
 
 // IA32_MSR_VMX_PROCBASED_CTRLS MSR (0x482)
@@ -1197,17 +1184,17 @@ typedef struct bx_VMCS
        (VMX_VM_EXEC_CTRL2_SUPPORTED_BITS | VMX_MSR_VMX_PROCBASED_CTRLS_LO)
 
 #define VMX_MSR_VMX_PROCBASED_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS_LO)
+   ((((uint64_t) VMX_MSR_VMX_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS_LO)
 
-// IA32_MSR_VMX_TRUE_PROCBASED_CTRLS MSR (0x48e)
+// IA32_MSR_VMX_true_PROCBASED_CTRLS MSR (0x48e)
 // ---------------------------------
 
 // Bits 15 and 16 no longer must be '1
-#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO (0x04006172)
-#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI (VMX_MSR_VMX_PROCBASED_CTRLS_HI)
+#define VMX_MSR_VMX_true_PROCBASED_CTRLS_LO (0x04006172)
+#define VMX_MSR_VMX_true_PROCBASED_CTRLS_HI (VMX_MSR_VMX_PROCBASED_CTRLS_HI)
 
-#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO)
+#define VMX_MSR_VMX_true_PROCBASED_CTRLS \
+   ((((uint64_t) VMX_MSR_VMX_true_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_true_PROCBASED_CTRLS_LO)
 
 
 // IA32_MSR_VMX_VMEXIT_CTRLS MSR (0x483)
@@ -1222,17 +1209,17 @@ typedef struct bx_VMCS
        (VMX_VMEXIT_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
 
 #define VMX_MSR_VMX_VMEXIT_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
+   ((((uint64_t) VMX_MSR_VMX_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
 
-// IA32_MSR_VMX_TRUE_VMEXIT_CTRLS MSR (0x48f)
+// IA32_MSR_VMX_true_VMEXIT_CTRLS MSR (0x48f)
 // ------------------------------
 
 // Bit 2 no longer must be '1
-#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO (0x00036DFB)
-#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI (VMX_MSR_VMX_VMEXIT_CTRLS_HI)
+#define VMX_MSR_VMX_true_VMEXIT_CTRLS_LO (0x00036DFB)
+#define VMX_MSR_VMX_true_VMEXIT_CTRLS_HI (VMX_MSR_VMX_VMEXIT_CTRLS_HI)
 
-#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO)
+#define VMX_MSR_VMX_true_VMEXIT_CTRLS \
+   ((((uint64_t) VMX_MSR_VMX_true_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_true_VMEXIT_CTRLS_LO)
 
 
 // IA32_MSR_VMX_VMENTRY_CTRLS MSR (0x484)
@@ -1247,17 +1234,17 @@ typedef struct bx_VMCS
        (VMX_VMENTRY_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 
 #define VMX_MSR_VMX_VMENTRY_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
+   ((((uint64_t) VMX_MSR_VMX_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 
-// IA32_MSR_VMX_TRUE_VMENTRY_CTRLS MSR (0x490)
+// IA32_MSR_VMX_true_VMENTRY_CTRLS MSR (0x490)
 // -------------------------------
 
 // Bit 2 is longer must be '1
-#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO (0x000011FB)
-#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI (VMX_MSR_VMX_VMENTRY_CTRLS_HI)
+#define VMX_MSR_VMX_true_VMENTRY_CTRLS_LO (0x000011FB)
+#define VMX_MSR_VMX_true_VMENTRY_CTRLS_HI (VMX_MSR_VMX_VMENTRY_CTRLS_HI)
 
-#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS \
-   ((((Bit64u) VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO)
+#define VMX_MSR_VMX_true_VMENTRY_CTRLS \
+   ((((uint64_t) VMX_MSR_VMX_true_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_true_VMENTRY_CTRLS_LO)
 
 
 // IA32_MSR_VMX_MISC MSR (0x485)
@@ -1307,14 +1294,14 @@ typedef struct bx_VMCS
 #define VMX_MSR_CR0_FIXED0_HI (0x00000000)
 
 #define VMX_MSR_CR0_FIXED0 \
-   ((((Bit64u) VMX_MSR_CR0_FIXED0_HI) << 32) | VMX_MSR_CR0_FIXED0_LO)
+   ((((uint64_t) VMX_MSR_CR0_FIXED0_HI) << 32) | VMX_MSR_CR0_FIXED0_LO)
 
 // allowed 1-setting in CR0 in VMX mode
 #define VMX_MSR_CR0_FIXED1_LO (0xFFFFFFFF)
 #define VMX_MSR_CR0_FIXED1_HI (0x00000000)
 
 #define VMX_MSR_CR0_FIXED1 \
-   ((((Bit64u) VMX_MSR_CR0_FIXED1_HI) << 32) | VMX_MSR_CR0_FIXED1_LO)
+   ((((uint64_t) VMX_MSR_CR0_FIXED1_HI) << 32) | VMX_MSR_CR0_FIXED1_LO)
 
 //
 // IA32_VMX_CR4_FIXED0 MSR (0x488)   IA32_VMX_CR4_FIXED1 MSR (0x489)
@@ -1326,14 +1313,14 @@ typedef struct bx_VMCS
 #define VMX_MSR_CR4_FIXED0_HI (0x00000000)
 
 #define VMX_MSR_CR4_FIXED0 \
-   ((((Bit64u) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO)
+   ((((uint64_t) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO)
 
 // allowed 1-setting in CR0 in VMX mode
 #define VMX_MSR_CR4_FIXED1_LO (cr4_suppmask_1)
 #define VMX_MSR_CR4_FIXED1_HI (0)
 
 #define VMX_MSR_CR4_FIXED1 \
-   ((((Bit64u) VMX_MSR_CR4_FIXED1_HI) << 32) | VMX_MSR_CR4_FIXED1_LO)
+   ((((uint64_t) VMX_MSR_CR4_FIXED1_HI) << 32) | VMX_MSR_CR4_FIXED1_LO)
 
 
 //
@@ -1349,7 +1336,7 @@ typedef struct bx_VMCS
 #define VMX_MSR_VMCS_ENUM_HI (0x00000000)
 
 #define VMX_MSR_VMCS_ENUM \
-   ((((Bit64u) VMX_MSR_VMCS_ENUM_HI) << 32) | VMX_MSR_VMCS_ENUM_LO)
+   ((((uint64_t) VMX_MSR_VMCS_ENUM_HI) << 32) | VMX_MSR_VMCS_ENUM_LO)
 
 
 // IA32_VMX_MSR_PROCBASED_CTRLS2 MSR (0x48b)
@@ -1362,7 +1349,7 @@ typedef struct bx_VMCS
        (VMX_VM_EXEC_CTRL3_SUPPORTED_BITS | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
 
 #define VMX_MSR_VMX_PROCBASED_CTRLS2 \
-   ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS2_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
+   ((((uint64_t) VMX_MSR_VMX_PROCBASED_CTRLS2_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
 
 #if BX_SUPPORT_VMX >= 2
 
@@ -1386,24 +1373,24 @@ enum VMX_INVEPT_INVVPID_type {
 #define VMENTRY_INJECTING_EVENT(vmentry_interr_info) (vmentry_interr_info & 0x80000000)
 
 #define VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO : VMX_MSR_VMX_PINBASED_CTRLS_LO)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_PINBASED_CTRLS_LO : VMX_MSR_VMX_PINBASED_CTRLS_LO)
 #define VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI : VMX_MSR_VMX_PINBASED_CTRLS_HI)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_PINBASED_CTRLS_HI : VMX_MSR_VMX_PINBASED_CTRLS_HI)
 
 #define VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_LO \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO : VMX_MSR_VMX_PROCBASED_CTRLS_LO)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_PROCBASED_CTRLS_LO : VMX_MSR_VMX_PROCBASED_CTRLS_LO)
 #define VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI : VMX_MSR_VMX_PROCBASED_CTRLS_HI)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_PROCBASED_CTRLS_HI : VMX_MSR_VMX_PROCBASED_CTRLS_HI)
 
 #define VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO : VMX_MSR_VMX_VMEXIT_CTRLS_LO)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_VMEXIT_CTRLS_LO : VMX_MSR_VMX_VMEXIT_CTRLS_LO)
 #define VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI : VMX_MSR_VMX_VMEXIT_CTRLS_HI)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_VMEXIT_CTRLS_HI : VMX_MSR_VMX_VMEXIT_CTRLS_HI)
 
 #define VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_LO \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO : VMX_MSR_VMX_VMENTRY_CTRLS_LO)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_VMENTRY_CTRLS_LO : VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 #define VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI \
-  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI : VMX_MSR_VMX_VMENTRY_CTRLS_HI)
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_true_VMENTRY_CTRLS_HI : VMX_MSR_VMX_VMENTRY_CTRLS_HI)
 
 #define BX_EVENT_NMI                          (1 <<  0)
 #define BX_EVENT_SMI                          (1 <<  1)
@@ -1531,23 +1518,23 @@ typedef enum {
 #define BX_VMX_LAST_ACTIVITY_STATE (BX_ACTIVITY_STATE_WAIT_FOR_SIPI)
 
 
-const Bit32u EFlagsCFMask = (1 << 0);
-const Bit32u EFlagsPFMask = (1 << 2);
-const Bit32u EFlagsAFMask = (1 << 4);
-const Bit32u EFlagsZFMask = (1 << 6);
-const Bit32u EFlagsSFMask = (1 << 7);
-const Bit32u EFlagsTFMask = (1 << 8);
-const Bit32u EFlagsIFMask = (1 << 9);
-const Bit32u EFlagsDFMask = (1 << 10);
-const Bit32u EFlagsOFMask = (1 << 11);
-const Bit32u EFlagsIOPLMask = (3 << 12);
-const Bit32u EFlagsNTMask = (1 << 14);
-const Bit32u EFlagsRFMask = (1 << 16);
-const Bit32u EFlagsVMMask = (1 << 17);
-const Bit32u EFlagsACMask = (1 << 18);
-const Bit32u EFlagsVIFMask = (1 << 19);
-const Bit32u EFlagsVIPMask = (1 << 20);
-const Bit32u EFlagsIDMask = (1 << 21);
+const uint32_t EFlagsCFMask = (1 << 0);
+const uint32_t EFlagsPFMask = (1 << 2);
+const uint32_t EFlagsAFMask = (1 << 4);
+const uint32_t EFlagsZFMask = (1 << 6);
+const uint32_t EFlagsSFMask = (1 << 7);
+const uint32_t EFlagsTFMask = (1 << 8);
+const uint32_t EFlagsIFMask = (1 << 9);
+const uint32_t EFlagsDFMask = (1 << 10);
+const uint32_t EFlagsOFMask = (1 << 11);
+const uint32_t EFlagsIOPLMask = (3 << 12);
+const uint32_t EFlagsNTMask = (1 << 14);
+const uint32_t EFlagsRFMask = (1 << 16);
+const uint32_t EFlagsVMMask = (1 << 17);
+const uint32_t EFlagsACMask = (1 << 18);
+const uint32_t EFlagsVIFMask = (1 << 19);
+const uint32_t EFlagsVIPMask = (1 << 20);
+const uint32_t EFlagsIDMask = (1 << 21);
 
 #define BX_INHIBIT_INTERRUPTS        0x01
 #define BX_INHIBIT_DEBUG             0x02
@@ -1737,7 +1724,7 @@ const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
 
 #define BX_PHY_ADDRESS_WIDTH 40
 
-#define BX_PHY_ADDRESS_MASK ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
+#define BX_PHY_ADDRESS_MASK ((((uint64_t)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
 #define BX_PHY_ADDRESS_RESERVED_BITS (~BX_PHY_ADDRESS_MASK)
 
 #if BX_SUPPORT_X86_64
@@ -1746,8 +1733,8 @@ const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
 #define BX_LIN_ADDRESS_WIDTH 32
 #endif
 
-#define BX_TRUE  (1)
-#define BX_FALSE (0)
+#define BX_true  (1)
+#define BX_false (0)
 
 enum {
 	BX_MEMTYPE_UC = 0,
@@ -1761,18 +1748,18 @@ enum {
 	BX_MEMTYPE_INVALID = 8
 };
 
-#define GET32L(val64) ((Bit32u)(((Bit64u)(val64)) & 0xFFFFFFFF))
-#define GET32H(val64) ((Bit32u)(((Bit64u)(val64)) >> 32))
+#define GET32L(val64) ((uint32_t)(((uint64_t)(val64)) & 0xFFFFFFFF))
+#define GET32H(val64) ((uint32_t)(((uint64_t)(val64)) >> 32))
 
 #define BX_PAGING_PHY_ADDRESS_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
+    (BX_PHY_ADDRESS_RESERVED_BITS & INT64_C(0xfffffffffffff))
 
-#define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+#define PAGE_DIRECTORY_NX_BIT (INT64_C(0x8000000000000000))
 
-#define BX_CR3_PAGING_MASK    (BX_CONST64(0x000ffffffffff000))
+#define BX_CR3_PAGING_MASK    (INT64_C(0x000ffffffffff000))
 
 #define PAGING_PAE_PDPTE_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | INT64_C(0xFFF00000000001E6))
 
 
 #define MSR_APIC_BASE                       0x01B
@@ -1791,10 +1778,10 @@ enum {
 #define MSR_IA32_VMX_VMCS_ENUM              0x48A
 #define MSR_IA32_VMX_PROCBASED_CTLS2        0x48B
 #define MSR_IA32_VMX_EPT_VPID_CAP           0x48C
-#define MSR_IA32_VMX_TRUE_PINBASED_CTLS     0x48D
-#define MSR_IA32_VMX_TRUE_PROCBASED_CTLS    0x48E
-#define MSR_IA32_VMX_TRUE_EXIT_CTLS         0x48F
-#define MSR_IA32_VMX_TRUE_ENTRY_CTLS        0x490
+#define MSR_IA32_VMX_true_PINBASED_CTLS     0x48D
+#define MSR_IA32_VMX_true_PROCBASED_CTLS    0x48E
+#define MSR_IA32_VMX_true_EXIT_CTLS         0x48F
+#define MSR_IA32_VMX_true_ENTRY_CTLS        0x490
 #define MSR_IA32_VMX_VMFUNC                 0x491
 
 #define MSR_IA32_SYSENTER_CS                0x174
@@ -1833,28 +1820,28 @@ typedef struct {
 
 
 typedef union bx_packed_reg_t {
-	Bit8s   _sbyte[8];
-	Bit16s  _s16[4];
-	Bit32s  _s32[2];
-	Bit64s  _s64;
-	Bit8u   _ubyte[8];
-	Bit16u  _u16[4];
-	Bit32u  _u32[2];
-	Bit64u  _u64;
+	int8_t   _sbyte[8];
+	int16_t  _s16[4];
+	int32_t  _s32[2];
+	int64_t  _s64;
+	uint8_t   _ubyte[8];
+	uint16_t  _u16[4];
+	uint32_t  _u32[2];
+	uint64_t  _u64;
 public:
 	bx_packed_reg_t() {}
-	bx_packed_reg_t(Bit64u val) : _u64(val) {}
-	bx_packed_reg_t(Bit64s val) : _s64(val) {}
+	bx_packed_reg_t(uint64_t val) : _u64(val) {}
+	bx_packed_reg_t(int64_t val) : _s64(val) {}
 } BxPackedRegister;
 
 
 
-BOOLEAN CheckVMXState(VMCS_CACHE *pVm, BOOLEAN IsVMResume, UINT64 VMXON_Pointer, INT32 RevisionID,
-	UINT32 _vmx_pin_vmexec_ctrl_supported_bits, UINT32 _vmx_proc_vmexec_ctrl_supported_bits,
-	UINT32 _vmx_vmexec_ctrl2_supported_bits, UINT32 _vmx_vmexit_ctrl_supported_bits,
-	UINT32 _vmx_vmentry_ctrl_supported_bits, UINT64 _vmx_ept_vpid_cap_supported_bits,
-	UINT64 _vmx_vmfunc_supported_bits, UINT32 _cr0_suppmask_0, UINT32 _cr0_suppmask_1,
-	UINT32 _cr4_suppmask_0, UINT32 _cr4_suppmask_1);
+bool CheckVMXState(VMCS_CACHE *pVm, bool IsVMResume, uint64_t VMXON_Pointer, int32_t RevisionID,
+	uint32_t _vmx_pin_vmexec_ctrl_supported_bits, uint32_t _vmx_proc_vmexec_ctrl_supported_bits,
+	uint32_t _vmx_vmexec_ctrl2_supported_bits, uint32_t _vmx_vmexit_ctrl_supported_bits,
+	uint32_t _vmx_vmentry_ctrl_supported_bits, uint64_t _vmx_ept_vpid_cap_supported_bits,
+	uint64_t _vmx_vmfunc_supported_bits, uint32_t _cr0_suppmask_0, uint32_t _cr0_suppmask_1,
+	uint32_t _cr4_suppmask_0, uint32_t _cr4_suppmask_1);
 
 
 
