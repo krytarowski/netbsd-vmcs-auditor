@@ -4,7 +4,7 @@
 // checking for Hypervisor From Scratch
 // You can use it in your hypervisor driver to check the states
 // before executing VMLAUNCH
-#include "pch.h"
+#include "Auditor.h"
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdio.h>

@@ -5,11 +5,11 @@
 // You can use it in your hypervisor driver to check the states
 // before executing VMLAUNCH
 
-#pragma once
+#ifndef _AUDITOR_H_
+#define _AUDITOR_H_
+
 #include <stdint.h>
 #include <stdbool.h>
-
-#include "pch.h"
 
 //#define BX_SUPPORT_VMX 1
 #define BX_SUPPORT_X86_64 1
@@ -1813,3 +1813,5 @@ bool CheckVMXState(VMCS_CACHE *pVm, bool IsVMResume, uint64_t VMXON_Pointer, int
 
 
 /////////////////////////////////////////////////////////////
+
+#endif // _AUDITOR_H_
