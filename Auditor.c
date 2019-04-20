@@ -5,9 +5,10 @@
 // You can use it in your hypervisor driver to check the states
 // before executing VMLAUNCH
 #include "pch.h"
-#include <iostream>
-#include <sstream>
-#include <string>
+#include <stdint.h>
+#include <inttypes.h>
+#include <stdio.h>
+
 ///
 /// Global Variables
 ///
@@ -28,6 +29,28 @@ uint32_t vmx_extensions_bitmask;
 
 uint64_t efer_suppmask = 0;
 
+const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
+
+const uint32_t EFlagsCFMask = (1 << 0);
+const uint32_t EFlagsPFMask = (1 << 2);
+const uint32_t EFlagsAFMask = (1 << 4);
+const uint32_t EFlagsZFMask = (1 << 6);
+const uint32_t EFlagsSFMask = (1 << 7);
+const uint32_t EFlagsTFMask = (1 << 8);
+const uint32_t EFlagsIFMask = (1 << 9);
+const uint32_t EFlagsDFMask = (1 << 10);
+const uint32_t EFlagsOFMask = (1 << 11);
+const uint32_t EFlagsIOPLMask = (3 << 12);
+const uint32_t EFlagsNTMask = (1 << 14);
+const uint32_t EFlagsRFMask = (1 << 16);
+const uint32_t EFlagsVMMask = (1 << 17);
+const uint32_t EFlagsACMask = (1 << 18);
+const uint32_t EFlagsVIFMask = (1 << 19);                                                                                                                    
+const uint32_t EFlagsVIPMask = (1 << 20);
+const uint32_t EFlagsIDMask = (1 << 21);
+
+// VMCS pointer is always 64-bit variable
+const uint64_t BX_INVALID_VMCSPTR = INT64_C(0xFFFFFFFFFFFFFFFF);
 
 BxExceptionInfo exceptions_info[32] = {
 	/* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
@@ -71,25 +94,16 @@ BxExceptionInfo exceptions_info[32] = {
 
 
 uint64_t ReadInputAuditor(const char* Message, int64_t DefaultValue){
-	std::cout << Message << " [ Default : 0x" << DefaultValue << " ]" << endl;
+	char buffer[128];
+	printf("%s [ Default : 0x%" PRIx64 " ]: ", Message, DefaultValue);
 
-	string numberstr = std::to_string(DefaultValue);
 	int64_t number = DefaultValue;
-	std::string input;
-	std::getline(std::cin, input);
-	if (!input.empty()) {
-		std::istringstream stream(input);
+	fgets(buffer, sizeof(buffer), stdin);
+	scanf("%" PRIx64, &number);
 
-		stream >> numberstr;
-	}
-
-	std::stringstream ss;
-	ss << std::hex << numberstr;
-	ss >> number;
-
-	cout << endl << "  =======>  " << Message << " Set to : " << std::hex << number << endl;
+	printf("\n");
+	printf("  =======>  %s Set to : %#" PRIx64 "\n", Message, number);
 	return number;
-
 }
 
 
@@ -311,7 +325,9 @@ bx_bool isMemTypeValidPAT(unsigned memtype)
 bx_bool isValidMSR_PAT(uint64_t pat_val)
 {
 	// use packed register as 64-bit value with convinient accessors
-	BxPackedRegister pat_msr = pat_val;
+	BxPackedRegister pat_msr = {};
+
+	pat_msr._u64 = pat_val;
 	for (unsigned i = 0; i < 8; i++)
 		if (!isMemTypeValidPAT(pat_msr.ubyte(i))) return BX_false;
 

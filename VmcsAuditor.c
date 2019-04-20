@@ -2,12 +2,10 @@
 //
 
 #include "pch.h"
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <cstdio>
 
-using namespace std;
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void PrintAsciiArt() {
 	printf("\n\n");
@@ -23,24 +21,12 @@ void PrintAsciiArt() {
 
 uint64_t ReadInput(const char* Message, int64_t DefaultValue) {
 
-	std::cout << Message << " [ Default : 0x"<< DefaultValue << " ]"<<endl;
+	printf("%s [ Default : 0x%" PRIx64 " ]: ", Message, DefaultValue);
 
-	string numberstr = std::to_string(DefaultValue);
 	int64_t number = DefaultValue;
-	std::string input;
-	std::getline(std::cin, input);
-	if (!input.empty()) {
-		std::istringstream stream(input);
+	scanf("%" PRIx64, &number);
 
-		stream >> numberstr;
-	}
-
-	std::stringstream ss;
-	ss << std::hex << numberstr;
-	ss >> number;
-
-	cout << endl << "  =======>  " << Message << " Set to : " << std::hex  << number << endl;
-
+	printf("  =======>  %s Set to : %#" PRIx64 "\n", Message, number);
 
 	return number;
 

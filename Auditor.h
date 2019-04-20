@@ -6,12 +6,10 @@
 // before executing VMLAUNCH
 
 #pragma once
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "pch.h"
-#include <iostream>
-
-
-using namespace std;
-
 
 //#define BX_SUPPORT_VMX 1
 #define BX_SUPPORT_X86_64 1
@@ -85,9 +83,6 @@ typedef struct bx_VMX_Cap
 #endif
 } VMX_CAP;
 
-
-// VMCS pointer is always 64-bit variable
-const uint64_t BX_INVALID_VMCSPTR = INT64_C(0xFFFFFFFFFFFFFFFF);
 
 #define POOLTAG 0x48564653 // [H]yper[V]isor [F]rom [S]cratch (HVFS)
 
@@ -1517,25 +1512,6 @@ typedef enum {
 
 #define BX_VMX_LAST_ACTIVITY_STATE (BX_ACTIVITY_STATE_WAIT_FOR_SIPI)
 
-
-const uint32_t EFlagsCFMask = (1 << 0);
-const uint32_t EFlagsPFMask = (1 << 2);
-const uint32_t EFlagsAFMask = (1 << 4);
-const uint32_t EFlagsZFMask = (1 << 6);
-const uint32_t EFlagsSFMask = (1 << 7);
-const uint32_t EFlagsTFMask = (1 << 8);
-const uint32_t EFlagsIFMask = (1 << 9);
-const uint32_t EFlagsDFMask = (1 << 10);
-const uint32_t EFlagsOFMask = (1 << 11);
-const uint32_t EFlagsIOPLMask = (3 << 12);
-const uint32_t EFlagsNTMask = (1 << 14);
-const uint32_t EFlagsRFMask = (1 << 16);
-const uint32_t EFlagsVMMask = (1 << 17);
-const uint32_t EFlagsACMask = (1 << 18);
-const uint32_t EFlagsVIFMask = (1 << 19);
-const uint32_t EFlagsVIPMask = (1 << 20);
-const uint32_t EFlagsIDMask = (1 << 21);
-
 #define BX_INHIBIT_INTERRUPTS        0x01
 #define BX_INHIBIT_DEBUG             0x02
 #define BX_INHIBIT_INTERRUPTS_BY_MOVSS        \
@@ -1656,9 +1632,6 @@ typedef enum {
 #define BX_LAPIC_IER6                 0x4D0
 #define BX_LAPIC_IER7                 0x4E0
 #define BX_LAPIC_IER8                 0x4F0
-
-
-const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
 
 
 // cpuid VMX features
@@ -1828,13 +1801,7 @@ typedef union bx_packed_reg_t {
 	uint16_t  _u16[4];
 	uint32_t  _u32[2];
 	uint64_t  _u64;
-public:
-	bx_packed_reg_t() {}
-	bx_packed_reg_t(uint64_t val) : _u64(val) {}
-	bx_packed_reg_t(int64_t val) : _s64(val) {}
 } BxPackedRegister;
-
-
 
 bool CheckVMXState(VMCS_CACHE *pVm, bool IsVMResume, uint64_t VMXON_Pointer, int32_t RevisionID,
 	uint32_t _vmx_pin_vmexec_ctrl_supported_bits, uint32_t _vmx_proc_vmexec_ctrl_supported_bits,
